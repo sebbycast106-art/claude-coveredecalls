@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/* ── Theta Desk design tokens — "pro trading-terminal dark" ──────────────────
+   Depth comes from layered backgrounds + hairline borders, not shadow/glow.
+   Action colors sit on the blue↔orange axis (CVD-safe); never red/green as the
+   primary action signal. Color is always paired with a word + glyph in the UI. */
+@theme {
+  /* Background layers */
+  --color-base: #0d1117; /* app shell, layer 0 */
+  --color-sunken: #0a0e14; /* table body / wells / hover, layer -1 */
+  --color-surface: #141a23; /* cards, stat tiles, layer 1 */
+  --color-raised: #1b2330; /* hero card / popovers, layer 2 */
+  --color-line: #232c3a; /* hairline borders */
+  --color-line-strong: #313c4d; /* card edges / focus base */
+
+  /* Text */
+  --color-ink: #eceff4; /* primary readouts, verbs, numbers */
+  --color-muted: #a4aebf; /* labels, secondary verbs */
+  --color-faint: #6b7689; /* units, captions, "as of" stamps */
+
+  /* Brand accent — one accent, used sparingly */
+  --color-accent: #4d8df0;
+
+  /* Action: ENTER (Sell to Open) — blue */
+  --color-enter: #3b82f6;
+  --color-enter-tint: #13233d;
+  --color-enter-on: #9dc4fb;
+  /* Action: HOLD / LET_ASSIGN — amber (steady-state) */
+  --color-hold: #d9a33a;
+  --color-hold-tint: #2a2310;
+  --color-hold-on: #f0c766;
+  /* Action: ROLL — violet (off the blue-orange axis; never collides) */
+  --color-roll: #a78be6;
+  --color-roll-tint: #221a38;
+  --color-roll-on: #c9b6f2;
+  /* Action: EXIT (Buy to Close) — warm orange (CVD-safe opposite of ENTER) */
+  --color-exit: #f0703a;
+  --color-exit-tint: #2e1810;
+  --color-exit-on: #f5a37d;
+  /* Action: STAND_ASIDE / No Trade — slate (categorical, quiet) */
+  --color-neutral: #7c8aa0;
+  --color-neutral-tint: #1a212c;
+  --color-neutral-on: #aeb8c7;
+
+  /* P/L numerics — paired with ▲/▼ + sign, never a bare colored number */
+  --color-up: #5ba3f5;
+  --color-down: #f0703a;
+
+  /* Type families (Inter + Roboto Mono shipped self-hosted via next/font) */
+  --font-sans: var(--font-inter), "Söhne", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-roboto-mono), "IBM Plex Mono", "SF Mono", ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tabular, slashed-zero numerics so columns align and 0 ≠ O in OCC symbols. */
+.tnum {
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "tnum", "zero";
+}
+
+/* Focus ring — single accent, visible, non-glowing. */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.22s ease-out;
+}
+
+/* ACT_TODAY rail attention — a single pulse, never a looping animation. */
+@keyframes pulseOnce {
+  0% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.85;
+  }
+}
+
+.pulse-once {
+  animation: pulseOnce 1.1s ease-out 2;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #141a23 25%, #1f2937 50%, #141a23 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
