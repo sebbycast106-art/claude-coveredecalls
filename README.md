@@ -13,6 +13,9 @@ password — without exposing your real positions (see **Demo mode**).
 This app was **extracted out of** the personal Mission Control dashboard so it can
 be distributed on its own, with none of the other personal projects' code.
 
+**Live:** https://covered-calls-app-production.up.railway.app — share the *demo*
+password; keep the owner password private.
+
 ---
 
 ## The core idea: answer three questions, per position
@@ -133,8 +136,12 @@ volume so the SQLite DB + run-history survive redeploys):
 2. Add a volume mounted at `/data`; set `DATABASE_URL=file:/data/app.db`.
 3. Set env vars: `JWT_SECRET`, `APP_PASSWORD_HASH`, `DEMO_PASSWORD_HASH`,
    `SCHEDULER_SECRET`.
-4. `railway up` from this directory. `railway.toml` runs `node server.js`
-   (Next standalone).
+4. `railway up` from this directory. `railway.toml` runs `npm run start`
+   (`next start`, reads Railway's `$PORT`). **Note:** railpack does *not* place the
+   Next standalone server at the app root — `node server.js` crash-loops with
+   `Cannot find module '/app/server.js'`, which is why we use `next start`.
+   Also: `railway volume add` panics until the service has a healthy deployment, so
+   **deploy first, then add the volume** (it redeploys to mount it).
 5. **Repoint the engine:** set the bot's GitHub Actions secret
    `DASHBOARD_PUSH_URL` → `https://<this-service>/api/push` and make the bot's
    `SCHEDULER_SECRET` match this app's. (No bot code change — the URL/secret are env.)
