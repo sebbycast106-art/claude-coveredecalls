@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ── Theta Desk design tokens — "pro trading-terminal dark" ──────────────────
+/* ── Premia design tokens — "pro trading-terminal dark" ──────────────────
    Depth comes from layered backgrounds + hairline borders, not shadow/glow.
    Action colors sit on the blue↔orange axis (CVD-safe); never red/green as the
    primary action signal. Color is always paired with a word + glyph in the UI. */

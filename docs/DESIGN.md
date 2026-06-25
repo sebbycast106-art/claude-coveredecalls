@@ -1,4 +1,4 @@
-# Theta Desk — Design & Decision Record
+# Premia — Design & Decision Record
 
 This is the durable record of *why* the app looks and behaves as it does. It
 captures the research, the sourced decision rules, the truthfulness guardrails the
@@ -35,10 +35,10 @@ Produced by a deliberately parallel, adversarially-checked process:
 
 ## 2. Brand & visual direction
 
-- **Brand:** *Theta Desk* — "Covered-call income, engineered." Theta = option time
-  decay, exactly what a covered-call income program harvests; "Desk" = a trading
-  desk a quant built. The name lives **only** in `src/lib/brand.ts` — rename in one
-  place.
+- **Brand:** *Premia* — "Covered-call income, engineered." "Premia" is the
+  institutional term for option/risk premia — exactly what a covered-call income
+  program harvests — so it reads as a real product, not hype. The name lives **only**
+  in `src/lib/brand.ts` — rename in one place.
 - **Direction:** *Pro trading-terminal dark.* Depth from layered backgrounds +
   hairline borders, not shadow/glow. Dense, right-aligned tabular numerics. Reads as
   a tool a quant built (the "finance peer" audience), not a consumer roboadvisor.

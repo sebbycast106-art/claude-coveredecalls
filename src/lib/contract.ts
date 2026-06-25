@@ -1,4 +1,4 @@
-// ── Theta Desk payload contract (schema_version 2) ──────────────────────────
+// ── Premia payload contract (schema_version 2) ──────────────────────────
 // THE single source of truth for the shape the Python engine pushes and the UI
 // renders. Keep this in lockstep with covered-call-bot's recommendation_to_dict
 // + build_payload. Bump SCHEMA_VERSION on any breaking change.

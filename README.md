@@ -1,4 +1,4 @@
-# Theta Desk — Covered-Call Decision Desk
+# Premia — Covered-Call Decision Desk
 
 A standalone, password-gated, **distributable** web app that presents the monthly
 covered-call recommendations from the [covered-call engine](../covered-call-bot)
