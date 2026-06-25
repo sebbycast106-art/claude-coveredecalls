@@ -3,7 +3,7 @@ import type { Action } from "@/lib/contract";
 import { fmtPct0 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-// ── Eyebrow — uppercase micro-label used on tiles, columns, sections ─────────
+// ── Eyebrow — uppercase micro-label (column heads, tile labels) ──────────────
 export function Eyebrow({
   children,
   className,
@@ -14,7 +14,7 @@ export function Eyebrow({
   return (
     <span
       className={cn(
-        "text-[10.5px] font-semibold uppercase tracking-[0.08em] text-faint leading-none",
+        "text-[10.5px] font-semibold uppercase tracking-[0.09em] text-faint leading-none",
         className
       )}
     >
@@ -23,23 +23,49 @@ export function Eyebrow({
   );
 }
 
-// ── Card chrome — hairline border, layered background, no shadow ─────────────
-export function Card({
+// ── Section / action title — the serif "assertion" that carries the argument ─
+export function SectionTitle({
   children,
   className,
-  raised,
+  as: Tag = "h2",
 }: {
   children: React.ReactNode;
   className?: string;
-  raised?: boolean;
+  as?: "h1" | "h2" | "h3";
+}) {
+  return (
+    <Tag
+      className={cn("font-serif font-normal text-ink tracking-[-0.01em] leading-snug", className)}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+// ── Source / footnote line under an exhibit ──────────────────────────────────
+export function SourceLine({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <p className={cn("text-[10.5px] text-faint leading-snug", className)}>{children}</p>;
+}
+
+// ── Exhibit surface — white, hairline, one soft shadow ───────────────────────
+export function Card({
+  children,
+  className,
+  flat,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  flat?: boolean;
 }) {
   return (
     <div
-      className={cn(
-        "rounded-xl border border-line",
-        raised ? "bg-raised" : "bg-surface",
-        className
-      )}
+      className={cn("rounded-lg border border-line bg-surface", flat ? "" : "exhibit", className)}
     >
       {children}
     </div>
@@ -60,7 +86,7 @@ export function Pill({
     <span
       title={title}
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold leading-none",
+        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10.5px] font-semibold leading-none",
         className
       )}
     >
@@ -69,7 +95,6 @@ export function Pill({
   );
 }
 
-// ── Action glyph — stroke icon from the taxonomy ─────────────────────────────
 export function ActionGlyph({
   action,
   className,
@@ -95,7 +120,7 @@ export function ActionGlyph({
   );
 }
 
-// ── Action badge — verb + glyph + color (the unmissable answer chip) ─────────
+// ── Action badge — verb + glyph + family color ───────────────────────────────
 export function ActionBadge({ action, size = "md" }: { action: Action; size?: "sm" | "md" }) {
   const meta = ACTION_META[action];
   const t = TONE_CLASSES[meta.tone];
@@ -103,7 +128,7 @@ export function ActionBadge({ action, size = "md" }: { action: Action; size?: "s
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border font-semibold",
+        "inline-flex items-center gap-1.5 rounded border font-semibold",
         t.badgeBg,
         t.badgeText,
         t.badgeBorder,
@@ -116,12 +141,12 @@ export function ActionBadge({ action, size = "md" }: { action: Action; size?: "s
   );
 }
 
-// ── Risk pill — % + Low/Mod/High (never hue alone) ───────────────────────────
+// ── Risk tier — % + Low/Mod/High (never hue alone) ───────────────────────────
 export function riskTier(p: number | null | undefined): { label: string; cls: string } {
   if (p == null) return { label: "—", cls: "text-faint" };
-  if (p < 0.2) return { label: "Low", cls: "text-enter-on" };
-  if (p < 0.4) return { label: "Mod", cls: "text-hold-on" };
-  return { label: "High", cls: "text-exit-on" };
+  if (p < 0.2) return { label: "Low", cls: "text-muted" };
+  if (p < 0.4) return { label: "Mod", cls: "text-risk" };
+  return { label: "High", cls: "text-risk" };
 }
 
 export function RiskPill({ p }: { p: number | null | undefined }) {
@@ -129,19 +154,21 @@ export function RiskPill({ p }: { p: number | null | undefined }) {
   if (p == null) return <span className="text-faint tnum">—</span>;
   return (
     <span className="inline-flex items-baseline justify-end gap-1.5 tnum">
-      <span className={cn("font-mono", t.cls)}>{fmtPct0(p)}</span>
-      <span className={cn("text-[10px] font-bold uppercase tracking-wide", t.cls)}>{t.label}</span>
+      <span className={cn("font-semibold", t.cls)}>{fmtPct0(p)}</span>
+      <span className={cn("text-[10px] font-semibold uppercase tracking-wide", t.cls)}>
+        {t.label}
+      </span>
     </span>
   );
 }
 
-// ── Domain badges ────────────────────────────────────────────────────────────
+// ── Domain badges (light) ────────────────────────────────────────────────────
 export function QccBadge({ qualified, itm }: { qualified: boolean | null; itm?: boolean }) {
-  if (qualified == null) return <span className="text-faint font-mono text-[11px]">—</span>;
+  if (qualified == null) return <span className="text-faint text-[11px]">—</span>;
   if (itm) {
     return (
       <Pill
-        className="border-exit/30 bg-exit/10 text-exit-on"
+        className="border-risk/25 bg-risk-soft text-risk"
         title="ITM qualified covered call — the holding period is suspended (LTCG could convert to STCG)"
       >
         QCC · ITM
@@ -150,14 +177,14 @@ export function QccBadge({ qualified, itm }: { qualified: boolean | null; itm?: 
   }
   return qualified ? (
     <Pill
-      className="border-enter/30 bg-enter/10 text-enter-on"
+      className="border-accent/20 bg-accent-soft text-accent"
       title="Qualified covered call — preserves the stock's long-term holding period"
     >
-      QCC ✓
+      QCC
     </Pill>
   ) : (
     <Pill className="border-line bg-sunken text-muted" title="Not a qualified covered call">
-      QCC ✕
+      non-QCC
     </Pill>
   );
 }
@@ -166,7 +193,7 @@ export function ExposureBadge({ st }: { st: number }) {
   if (!st) return null;
   return (
     <Pill
-      className="border-exit/30 bg-exit/10 text-exit-on"
+      className="border-risk/25 bg-risk-soft text-risk"
       title={`${st} short-term shares exposed — assignment would be taxed at the higher short-term rate`}
     >
       {st} ST exposed
@@ -178,7 +205,7 @@ export function EventBadge({ kind }: { kind: "ex-div" | "earnings" }) {
   const label = kind === "ex-div" ? "ex-div before expiry" : "earnings before expiry";
   return (
     <Pill
-      className="border-hold/30 bg-hold/10 text-hold-on"
+      className="border-risk/25 bg-risk-soft text-risk"
       title={`${label} — a known assignment / volatility trigger`}
     >
       {label}
@@ -189,10 +216,10 @@ export function EventBadge({ kind }: { kind: "ex-div" | "earnings" }) {
 export function BelowTargetChip() {
   return (
     <Pill
-      className="border-hold/30 bg-hold/10 text-hold-on"
+      className="border-risk/25 bg-risk-soft text-risk"
       title="Premium is below the ~2%/mo house target"
     >
-      ↓ below 2%/mo
+      below 2%/mo
     </Pill>
   );
 }

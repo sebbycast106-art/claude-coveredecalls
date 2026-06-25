@@ -1,22 +1,21 @@
 import Link from "next/link";
 
-// Standing institutional disclosure on every page.
+// One tasteful disclosure line — the truthful minimum; the full text lives in the
+// Methodology & Disclosures appendix.
 export function Footer() {
   return (
-    <footer className="border-t border-line mt-10">
-      <div className="mx-auto max-w-[1180px] px-5 py-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] text-faint text-center">
-        <span>Not investment advice</span>
-        <span className="text-line-strong">·</span>
-        <span>Analyze-only — never places trades</span>
-        <span className="text-line-strong">·</span>
-        <span>Personal project, not affiliated with any employer</span>
-        <span className="text-line-strong">·</span>
-        <Link
-          href="/disclosures"
-          className="text-muted hover:text-ink underline underline-offset-2"
-        >
-          Full disclosures
-        </Link>
+    <footer className="border-t border-line mt-16">
+      <div className="mx-auto max-w-[1120px] px-6 py-6">
+        <p className="text-[11px] text-faint leading-relaxed max-w-3xl">
+          Premia is an analysis tool, not a broker — it never places trades. Figures are modeled on
+          delayed data and are not investment advice.{" "}
+          <Link
+            href="/disclosures"
+            className="text-muted hover:text-accent underline underline-offset-2"
+          >
+            Methodology &amp; disclosures →
+          </Link>
+        </p>
       </div>
     </footer>
   );

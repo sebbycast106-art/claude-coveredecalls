@@ -1,16 +1,8 @@
 import { ActionBadge, Eyebrow, Pill, RiskPill } from "@/components/ui";
-import { ACTION_META } from "@/lib/actions";
+import { ACTION_META, TONE_VAR } from "@/lib/actions";
 import type { Recommendation } from "@/lib/contract";
 import { contractLabel, fmtMoney, fmtMoneySigned, fmtNum, fmtPct1, parseOcc } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-const TONE_VAR: Record<string, string> = {
-  enter: "var(--color-enter)",
-  hold: "var(--color-hold)",
-  roll: "var(--color-roll)",
-  exit: "var(--color-exit)",
-  neutral: "var(--color-neutral)",
-};
 
 function Th({ children, right }: { children: React.ReactNode; right?: boolean }) {
   return (
@@ -22,11 +14,11 @@ function Th({ children, right }: { children: React.ReactNode; right?: boolean })
 
 export function ScanTable({ recs }: { recs: Recommendation[] }) {
   return (
-    <div className="rounded-xl border border-line bg-surface overflow-hidden">
+    <div className="rounded-lg border border-line bg-surface exhibit overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="border-b border-line">
+            <tr className="border-b border-line-strong">
               <Th>Ticker</Th>
               <Th>Action</Th>
               <Th>Contract</Th>
@@ -39,7 +31,7 @@ export function ScanTable({ recs }: { recs: Recommendation[] }) {
               <Th right>Rank</Th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line/60">
+          <tbody className="divide-y divide-line">
             {recs.map((r) => {
               const oc = r.open_call;
               const tone = ACTION_META[r.action].tone;
@@ -50,7 +42,7 @@ export function ScanTable({ recs }: { recs: Recommendation[] }) {
               const sym = oc?.open_contract_symbol ?? r.contract_symbol;
               const human = parseOcc(sym)?.human ?? contractLabel(r.ticker, strike, r.expiry);
               return (
-                <tr key={r.ticker} className="hover:bg-sunken/60 transition-colors">
+                <tr key={r.ticker} className="hover:bg-sunken transition-colors">
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-2">
                       <span
@@ -63,10 +55,10 @@ export function ScanTable({ recs }: { recs: Recommendation[] }) {
                   <td className="px-3 py-2.5">
                     <ActionBadge action={r.action} size="sm" />
                   </td>
-                  <td className="px-3 py-2.5 text-faint font-mono text-[11.5px] whitespace-nowrap">
+                  <td className="px-3 py-2.5 text-muted font-mono text-[11.5px] whitespace-nowrap">
                     {strike != null ? human : "—"}
                     {r.below_target && r.action === "ENTER" && (
-                      <Pill className="ml-2 border-hold/30 bg-hold/10 text-hold-on">↓2%</Pill>
+                      <Pill className="ml-2 border-risk/25 bg-risk-soft text-risk">↓2%</Pill>
                     )}
                   </td>
                   <td className="px-3 py-2.5 text-right font-mono tnum text-muted">
@@ -84,7 +76,7 @@ export function ScanTable({ recs }: { recs: Recommendation[] }) {
                   <td
                     className={cn(
                       "px-3 py-2.5 text-right font-mono tnum font-semibold",
-                      r.net_premium_per_share != null ? "text-enter-on" : "text-faint"
+                      r.net_premium_per_share != null ? "text-ink" : "text-faint"
                     )}
                   >
                     {r.net_premium_per_share != null
@@ -93,8 +85,8 @@ export function ScanTable({ recs }: { recs: Recommendation[] }) {
                   </td>
                   <td
                     className={cn(
-                      "px-3 py-2.5 text-right font-mono tnum",
-                      r.below_target ? "text-hold-on" : "text-muted"
+                      "px-3 py-2.5 text-right font-mono tnum font-semibold",
+                      r.below_target ? "text-risk" : "text-accent"
                     )}
                   >
                     {fmtPct1(r.monthly_yield)}
@@ -111,10 +103,11 @@ export function ScanTable({ recs }: { recs: Recommendation[] }) {
           </tbody>
         </table>
       </div>
-      <div className="border-t border-line px-3 py-2 text-[10.5px] text-faint">
-        Open positions show their <span className="text-muted">current</span> contract; flat tickers
-        show the <span className="text-muted">candidate</span> write. &quot;Rank&quot; is a
-        tax-adjusted ordering score, not dollars.
+      <div className="border-t border-line px-3 py-2">
+        <p className="text-[10.5px] text-faint">
+          Open positions show the current contract; flat tickers show the candidate write. Source:
+          modeled, delayed quotes.
+        </p>
       </div>
     </div>
   );

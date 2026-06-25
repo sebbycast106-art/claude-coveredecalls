@@ -61,6 +61,14 @@ export function fmtDateYear(iso: string | null | undefined): string {
   return `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])} '${m[1].slice(2)}`;
 }
 
+// YYYY-MM-DD → "24 Jun 2026" (research-note masthead "as of" style).
+export function fmtDateLong(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  return `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}`;
+}
+
 export function fmtTimestamp(iso?: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);

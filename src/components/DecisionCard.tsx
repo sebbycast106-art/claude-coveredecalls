@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LifecycleStepper } from "@/components/LifecycleStepper";
+import { AssignmentRiskBar, YieldBullet } from "@/components/charts";
 import { PayoffDiagram } from "@/components/PayoffDiagram";
 import {
   ActionBadge,
@@ -12,8 +12,9 @@ import {
   Pill,
   QccBadge,
   RiskPill,
+  SectionTitle,
 } from "@/components/ui";
-import { ACTION_META, TONE_CLASSES, TRIGGER_LABEL } from "@/lib/actions";
+import { ACTION_META, TONE_VAR, TRIGGER_LABEL } from "@/lib/actions";
 import type { Recommendation } from "@/lib/contract";
 import {
   contractLabel,
@@ -28,31 +29,26 @@ import {
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const TONE_VAR: Record<string, string> = {
-  enter: "var(--color-enter)",
-  hold: "var(--color-hold)",
-  roll: "var(--color-roll)",
-  exit: "var(--color-exit)",
-  neutral: "var(--color-neutral)",
-};
-
 function Metric({
   label,
   value,
   sub,
+  chart,
   valueClass,
 }: {
   label: string;
   value: React.ReactNode;
   sub?: React.ReactNode;
+  chart?: React.ReactNode;
   valueClass?: string;
 }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <Eyebrow>{label}</Eyebrow>
       <span className={cn("text-[15px] font-semibold tnum text-ink leading-none", valueClass)}>
         {value}
       </span>
+      {chart}
       {sub && <span className="text-[10.5px] text-faint tnum leading-none">{sub}</span>}
     </div>
   );
@@ -63,15 +59,15 @@ function CopySymbol({ symbol }: { symbol: string }) {
   return (
     <button
       type="button"
-      onClick={() => {
+      onClick={() =>
         navigator.clipboard?.writeText(symbol).then(
           () => {
             setDone(true);
             setTimeout(() => setDone(false), 1200);
           },
           () => {}
-        );
-      }}
+        )
+      }
       title={`Copy ${symbol}`}
       className="font-mono text-[10.5px] text-faint hover:text-muted transition-colors"
     >
@@ -80,24 +76,24 @@ function CopySymbol({ symbol }: { symbol: string }) {
   );
 }
 
-function ProfitBar({ pct, accent }: { pct: number; accent: string }) {
+function ProfitBar({ pct }: { pct: number }) {
   const w = Math.max(0, Math.min(1, pct));
   const underwater = pct < 0;
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <Eyebrow>Max profit captured</Eyebrow>
       <div className="flex items-center gap-2">
-        <div className="h-1.5 w-full max-w-[140px] rounded-full bg-sunken overflow-hidden">
+        <div className="h-1.5 w-full max-w-[120px] rounded-full bg-sunken overflow-hidden">
           <div
             className="h-full rounded-full"
             style={{
               width: `${w * 100}%`,
-              backgroundColor: underwater ? "var(--color-exit)" : accent,
+              backgroundColor: underwater ? "var(--color-risk)" : "var(--color-accent)",
             }}
           />
         </div>
         <span
-          className={cn("text-[13px] font-semibold tnum", underwater ? "text-exit-on" : "text-ink")}
+          className={cn("text-[13px] font-semibold tnum", underwater ? "text-risk" : "text-ink")}
         >
           {fmtPct0(pct)}
         </span>
@@ -107,13 +103,12 @@ function ProfitBar({ pct, accent }: { pct: number; accent: string }) {
 }
 
 function MetricGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3.5">{children}</div>;
+  return <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-4">{children}</div>;
 }
 
 export function DecisionCard({ rec }: { rec: Recommendation }) {
   const [open, setOpen] = useState(false);
   const meta = ACTION_META[rec.action];
-  const tone = TONE_CLASSES[meta.tone];
   const accent = TONE_VAR[meta.tone];
   const oc = rec.open_call;
   const rt = rec.roll_target;
@@ -123,74 +118,50 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
     parseOcc(rec.contract_symbol)?.human ?? contractLabel(rec.ticker, rec.strike, rec.expiry);
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-xl border border-line",
-        quiet ? "bg-surface" : "bg-raised"
-      )}
-    >
-      {/* action-color left rail */}
+    <div className="relative overflow-hidden rounded-lg border border-line bg-surface exhibit">
       <div
-        className={cn(
-          "absolute left-0 top-0 bottom-0 w-[5px]",
-          rec.urgency === "ACT_TODAY" && "pulse-once"
-        )}
+        className="absolute left-0 top-0 bottom-0 w-[3px]"
         style={{ backgroundColor: accent }}
         aria-hidden="true"
       />
-
-      <div className="pl-5 pr-4 py-4">
-        {/* Header: ticker + state + action answer */}
+      <div className="pl-6 pr-5 py-5">
+        {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl font-semibold font-mono text-ink tracking-tight">
-              {rec.ticker}
-            </span>
-            <Pill
-              className={cn(
-                "border",
-                isOpenPos
-                  ? "border-line-strong bg-sunken text-muted"
-                  : "border-line bg-sunken text-faint"
-              )}
-            >
-              {isOpenPos ? "CALL OPEN" : "FLAT"}
+            <span className="text-lg font-semibold text-ink tracking-tight">{rec.ticker}</span>
+            <Pill className={cn("border-line bg-sunken", isOpenPos ? "text-muted" : "text-faint")}>
+              {isOpenPos ? "Call open" : "Flat"}
             </Pill>
             {rec.urgency === "ACT_TODAY" && (
-              <Pill className="border-exit/40 bg-exit/15 text-exit-on">ACT TODAY</Pill>
-            )}
-            {rec.urgency === "SOON" && (
-              <Pill className="border-hold/30 bg-hold/10 text-hold-on">soon</Pill>
+              <Pill className="border-risk/25 bg-risk-soft text-risk">Act today</Pill>
             )}
           </div>
           <ActionBadge action={rec.action} />
         </div>
 
-        {/* Headline (verbatim) + owner verb */}
-        <div className="mt-3">
-          <p className="text-[15px] leading-snug font-medium text-ink">{rec.headline}</p>
-          <p className={cn("mt-1 text-[12.5px]", tone.on)}>
-            {meta.framing} — {meta.ownerVerb.toLowerCase()}.
-          </p>
-        </div>
+        {/* Serif assertion headline */}
+        <SectionTitle as="h3" className="mt-3 text-[18px] leading-snug">
+          {rec.headline}
+        </SectionTitle>
 
         {/* Badges */}
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          {!quiet && <QccBadge qualified={rec.qcc_qualified} itm={oc?.qcc_currently_itm} />}
-          <ExposureBadge st={rec.st_shares_written} />
-          {rec.ex_div_before_expiry && <EventBadge kind="ex-div" />}
-          {rec.earnings_before_expiry && <EventBadge kind="earnings" />}
-          {rec.below_target && rec.action === "ENTER" && <BelowTargetChip />}
-        </div>
+        {(!quiet || rec.st_shares_written > 0 || rec.ex_div_before_expiry) && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            {!quiet && <QccBadge qualified={rec.qcc_qualified} itm={oc?.qcc_currently_itm} />}
+            <ExposureBadge st={rec.st_shares_written} />
+            {rec.ex_div_before_expiry && <EventBadge kind="ex-div" />}
+            {rec.earnings_before_expiry && <EventBadge kind="earnings" />}
+            {rec.below_target && rec.action === "ENTER" && <BelowTargetChip />}
+          </div>
+        )}
 
-        {/* ── Body: state-specific ─────────────────────────────────────────── */}
+        {/* Body */}
         {quiet ? (
-          <p className="mt-4 text-[13px] leading-relaxed text-muted">
+          <p className="mt-4 text-[13px] leading-relaxed text-muted max-w-2xl">
             {rec.no_trade_reason ?? rec.rationale}
           </p>
         ) : !isOpenPos ? (
-          /* ENTER — candidate write */
-          <div className="mt-4 space-y-3.5">
+          <div className="mt-4 space-y-4">
             <div className="flex items-center gap-2 text-[13px]">
               <span className="text-ink font-medium">{human}</span>
               {rec.contract_symbol && <CopySymbol symbol={rec.contract_symbol} />}
@@ -200,17 +171,18 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
                 label="Net premium / sh"
                 value={fmtMoneySigned(rec.net_premium_per_share, 2)}
                 sub={`${fmtMoney(rec.gross_premium_total, 0)} on ${rec.contracts}×`}
-                valueClass="text-enter-on"
               />
               <Metric
-                label="Yield"
+                label="Monthly yield"
                 value={fmtPct1(rec.monthly_yield)}
+                chart={<YieldBullet monthly={rec.monthly_yield} />}
                 sub={`${fmtPct0(rec.annualized_yield)} annualized`}
-                valueClass={rec.below_target ? "text-hold-on" : undefined}
+                valueClass={rec.below_target ? "text-risk" : undefined}
               />
               <Metric
                 label="Assignment risk"
                 value={<RiskPill p={rec.prob_assignment_rw} />}
+                chart={<AssignmentRiskBar p={rec.prob_assignment_rw} />}
                 sub={`Δ ${fmtNum(rec.delta)}`}
               />
               <Metric
@@ -221,8 +193,7 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
             </MetricGrid>
           </div>
         ) : (
-          /* OPEN — manage existing call */
-          <div className="mt-4 space-y-3.5">
+          <div className="mt-4 space-y-4">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
               <span className="text-ink font-medium">
                 Short {oc.open_contracts}×{" "}
@@ -234,10 +205,9 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
                 {oc.days_held}d held · {oc.open_dte}d left
               </span>
             </div>
-
             <MetricGrid>
               <div className="col-span-2 sm:col-span-1">
-                <ProfitBar pct={oc.pct_max_profit_captured} accent={accent} />
+                <ProfitBar pct={oc.pct_max_profit_captured} />
               </div>
               <Metric
                 label="Delta now"
@@ -247,19 +217,19 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
               <Metric
                 label="Assignment now"
                 value={<RiskPill p={oc.assignment_prob_now} />}
+                chart={<AssignmentRiskBar p={oc.assignment_prob_now} />}
                 sub={oc.is_itm ? "in the money" : "out of the money"}
               />
               <Metric
                 label="Option P/L"
                 value={fmtMoneySigned(oc.unrealized_option_pl_total, 0)}
                 sub={`${fmtPctSigned(oc.distance_to_strike)} to strike`}
-                valueClass={oc.unrealized_option_pl_total >= 0 ? "text-up" : "text-down"}
+                valueClass={oc.unrealized_option_pl_total >= 0 ? "text-pos" : "text-neg"}
               />
             </MetricGrid>
 
-            {/* ROLL — current vs proposed */}
             {rt && (
-              <div className="rounded-lg border border-roll/25 bg-roll-tint/60 p-3">
+              <div className="rounded-md border border-line bg-sunken px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 text-[12.5px]">
                     <div>
@@ -268,7 +238,7 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
                         {fmtMoney(oc.open_strike, 0)} · {fmtDateYear(oc.open_expiry)}
                       </div>
                     </div>
-                    <span className="text-roll-on text-lg">→</span>
+                    <span className="text-faint text-lg">→</span>
                     <div>
                       <Eyebrow>Proposed</Eyebrow>
                       <div className="text-ink tnum mt-1">
@@ -281,32 +251,29 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
                     <div
                       className={cn(
                         "text-lg font-semibold tnum mt-1",
-                        rt.net_credit_per_share >= 0 ? "text-up" : "text-down"
+                        rt.net_credit_per_share >= 0 ? "text-pos" : "text-neg"
                       )}
                     >
                       {fmtMoneySigned(rt.net_credit_total, 0)}
                     </div>
                   </div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {rt.preserves_qcc && (
-                    <Pill className="border-enter/30 bg-enter/10 text-enter-on">keeps QCC</Pill>
+                    <Pill className="border-accent/20 bg-accent-soft text-accent">keeps QCC</Pill>
                   )}
                   {rt.roll_is_defensive && (
-                    <Pill className="border-exit/30 bg-exit/10 text-exit-on">
-                      defensive (debit)
-                    </Pill>
+                    <Pill className="border-risk/25 bg-risk-soft text-risk">defensive (debit)</Pill>
                   )}
-                  <Pill className="border-line bg-sunken text-faint">
+                  <Pill className="border-line bg-surface text-muted">
                     Δ {fmtNum(rt.new_delta)} · {rt.new_dte}d
                   </Pill>
                 </div>
               </div>
             )}
 
-            {/* LET_ASSIGN — proceeds note */}
             {rec.action === "LET_ASSIGN" && (
-              <div className="rounded-lg border border-hold/25 bg-hold-tint/60 px-3 py-2 text-[12.5px] text-hold-on">
+              <div className="rounded-md border border-line bg-sunken px-4 py-2.5 text-[12.5px] text-muted">
                 Assignment proceeds ≈ {fmtMoney(oc.open_strike + oc.entry_premium_per_share, 2)}/sh
                 (strike + premium), realized at the long-term rate.
               </div>
@@ -314,36 +281,25 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
           </div>
         )}
 
-        {/* Lifecycle + rationale */}
-        <div className="mt-4 pt-3.5 border-t border-line">
-          <LifecycleStepper rec={rec} accent={accent} />
-          <p className="mt-3 text-[12.5px] leading-relaxed text-muted">{rec.rationale}</p>
-          {rec.action_reason ? (
-            <p className="mt-2 text-[11.5px] text-faint">{rec.action_reason}</p>
-          ) : rec.action_trigger && rec.action_trigger !== "NONE" ? (
-            <p className="mt-2 text-[11.5px] text-faint">{TRIGGER_LABEL[rec.action_trigger]}</p>
-          ) : null}
-        </div>
-
-        {/* Expand: payoff + secondary metrics */}
+        {/* Progressive disclosure — payoff + the tiered rigor (rationale/why) */}
         {!quiet && (
           <>
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="mt-3 text-[11.5px] font-medium text-muted hover:text-ink transition-colors"
+              className="mt-4 text-[11.5px] text-muted hover:text-accent transition-colors"
             >
-              {open ? "Hide detail ▲" : "Show payoff & detail ▼"}
+              {open ? "Hide detail ▲" : "Payoff & detail ▼"}
             </button>
             {open && (
               <div className="mt-3 grid lg:grid-cols-2 gap-4 animate-fadeIn">
-                <div className="rounded-lg border border-line bg-sunken p-3">
+                <div className="rounded-md border border-line bg-sunken p-3">
                   <Eyebrow>Payoff at expiration</Eyebrow>
                   <div className="mt-2">
                     <PayoffDiagram rec={rec} />
                   </div>
                 </div>
-                <div className="rounded-lg border border-line bg-sunken p-3">
+                <div className="rounded-md border border-line bg-sunken p-3">
                   <Eyebrow>Detail</Eyebrow>
                   <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2.5 text-[12px]">
                     <DetailItem
@@ -373,6 +329,14 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
                       />
                     )}
                   </dl>
+                  {(rec.rationale || rec.action_reason) && (
+                    <p className="mt-3 pt-3 border-t border-line text-[11.5px] text-muted leading-relaxed">
+                      {rec.rationale}
+                      {rec.action_trigger && rec.action_trigger !== "NONE" && (
+                        <span className="text-faint"> ({TRIGGER_LABEL[rec.action_trigger]})</span>
+                      )}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -386,7 +350,7 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
 function DetailItem({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="flex flex-col gap-0.5" title={hint}>
-      <dt className="text-[10.5px] text-faint uppercase tracking-wide">{label}</dt>
+      <dt className="text-[10px] text-faint uppercase tracking-wide">{label}</dt>
       <dd className="text-ink tnum">{value}</dd>
     </div>
   );

@@ -20,61 +20,65 @@ export default function LoginPage() {
       await post("/auth/login", { password });
       router.push("/");
     } catch {
-      setError("Invalid password. Try again.");
+      setError("Incorrect access code.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0e14] px-4 relative overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(28,37,49,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(28,37,49,0.5) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
-        }}
-      />
-      <div className="w-full max-w-sm relative z-10">
-        <div className="rounded-2xl border border-[#1c2531] bg-gradient-to-br from-[#131a24] to-[#0a0e14] p-8 shadow-2xl shadow-black/50">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white tracking-tight">{BRAND.name}</h1>
-            <p className="text-sm text-[#8b97a6] mt-1.5">{BRAND.tagline}</p>
+    <div className="min-h-screen flex items-center justify-center bg-canvas px-4">
+      <div className="w-full max-w-sm">
+        <div className="rounded-lg border border-line bg-surface exhibit p-8">
+          <div className="flex items-center gap-2.5 mb-1">
+            <svg
+              className="w-5 h-5 text-accent shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="8.6" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M7.6 12h8.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <span className="font-serif text-[22px] text-ink tracking-[-0.01em]">{BRAND.name}</span>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-sm text-muted mb-7">{BRAND.tagline}</p>
+
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Access password"
-                className="w-full px-4 py-3 pr-16 rounded-xl bg-[#0a0e14] border border-[#1c2531] text-white placeholder-[#5b6573] focus:outline-none focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/30 transition-colors text-sm"
+                placeholder="Access code"
+                // biome-ignore lint/a11y/noAutofocus: single-field gate, focus is expected
+                autoFocus
+                className="w-full px-3.5 py-2.5 pr-16 rounded-md bg-surface border border-line-strong text-ink placeholder-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-colors text-sm"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5b6573] hover:text-[#8b97a6] transition-colors text-xs font-semibold"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors text-[11px] font-semibold"
                 tabIndex={-1}
               >
                 {showPassword ? "HIDE" : "SHOW"}
               </button>
             </div>
             {error && (
-              <div className="text-sm text-[#f87171] bg-[#f87171]/10 border border-[#f87171]/20 rounded-lg px-3 py-2">
+              <div className="text-sm text-risk bg-risk-soft border border-risk/20 rounded-md px-3 py-2">
                 {error}
               </div>
             )}
             <button
               type="submit"
               disabled={loading || !password}
-              className="w-full py-3 rounded-xl bg-[#3b82f6] text-white font-semibold text-sm hover:bg-[#2563eb] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 rounded-md bg-accent text-white font-semibold text-sm hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
               {loading ? "Signing in…" : "Enter"}
             </button>
           </form>
         </div>
-        <p className="text-center text-[#5b6573] text-xs mt-5">
+        <p className="text-center text-faint text-[11px] mt-5">
           Private · analyze-only · not investment advice
         </p>
       </div>

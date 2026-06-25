@@ -1,35 +1,29 @@
 import type { Recommendation } from "@/lib/contract";
 import { fmtMoney } from "@/lib/format";
 
-// Covered-call P/L-at-expiration curve with breakeven + strike marked.
-// Solid = at expiration (institutional convention). Pure SVG, no gradients.
+// Covered-call P/L-at-expiration — navy curve on white, grey reference lines,
+// a faint shaded "upside capped" region above the strike. No gridlines/legend.
 export function PayoffDiagram({ rec }: { rec: Recommendation }) {
   const strike = rec.open_call?.open_strike ?? rec.strike;
   const premium = rec.open_call?.entry_premium_per_share ?? rec.net_premium_per_share;
   const spot = rec.spot;
   if (strike == null || premium == null || spot == null) return null;
 
-  // Basis proxy: use breakeven (spot − premium) as the cost anchor for the line.
   const basis = rec.breakeven ?? spot - premium;
-
   const W = 520;
   const H = 150;
   const padL = 8;
   const padR = 8;
-  const padT = 14;
-  const padB = 22;
+  const padT = 16;
+  const padB = 24;
 
-  // Price axis range around the strike/spot.
   const lo = Math.min(basis, spot) * 0.92;
   const hi = strike * 1.12;
   const x = (p: number) => padL + ((p - lo) / (hi - lo)) * (W - padL - padR);
 
-  // P/L per share at expiration: below strike → (S − basis) + premium − (S − basis)... covered call:
-  // payoff = min(S, strike) − basis + premium  (capped at strike − basis + premium).
   const pl = (S: number) => Math.min(S, strike) - basis + premium;
   const maxProfit = strike - basis + premium;
-  const minShown = pl(lo);
-  const plLo = Math.min(minShown, 0) * 1.1;
+  const plLo = Math.min(pl(lo), 0) * 1.1;
   const plHi = maxProfit * 1.25 || 1;
   const y = (v: number) => padT + (1 - (v - plLo) / (plHi - plLo)) * (H - padT - padB);
 
@@ -41,6 +35,7 @@ export function PayoffDiagram({ rec }: { rec: Recommendation }) {
 
   const zeroY = y(0);
   const beX = x(basis);
+  const strikeX = x(strike);
 
   return (
     <svg
@@ -49,7 +44,15 @@ export function PayoffDiagram({ rec }: { rec: Recommendation }) {
       role="img"
       aria-label="Payoff at expiration"
     >
-      {/* zero line */}
+      {/* capped-upside region above the strike */}
+      <rect
+        x={strikeX}
+        y={padT}
+        width={W - padR - strikeX}
+        height={H - padB - padT}
+        fill="var(--color-accent-soft)"
+      />
+      {/* zero baseline */}
       <line
         x1={padL}
         y1={zeroY}
@@ -58,27 +61,16 @@ export function PayoffDiagram({ rec }: { rec: Recommendation }) {
         stroke="var(--color-line)"
         strokeWidth="1"
       />
-      {/* strike marker */}
+      {/* strike + breakeven reference lines */}
       <line
-        x1={x(strike)}
+        x1={strikeX}
         y1={padT}
-        x2={x(strike)}
+        x2={strikeX}
         y2={H - padB}
         stroke="var(--color-line-strong)"
         strokeWidth="1"
         strokeDasharray="3 3"
       />
-      <text
-        x={x(strike)}
-        y={H - 7}
-        fill="var(--color-faint)"
-        fontSize="9"
-        textAnchor="middle"
-        className="font-mono"
-      >
-        strike {fmtMoney(strike, 0)}
-      </text>
-      {/* breakeven marker */}
       <line
         x1={beX}
         y1={padT}
@@ -88,34 +80,29 @@ export function PayoffDiagram({ rec }: { rec: Recommendation }) {
         strokeWidth="1"
         strokeDasharray="1 3"
       />
-      <text
-        x={beX}
-        y={H - 7}
-        fill="var(--color-faint)"
-        fontSize="9"
-        textAnchor="middle"
-        className="font-mono"
-      >
-        be {fmtMoney(basis, 0)}
+      <text x={strikeX} y={H - 8} fill="var(--color-faint)" fontSize="9.5" textAnchor="middle">
+        strike {fmtMoney(strike, 0)}
+      </text>
+      <text x={beX} y={H - 8} fill="var(--color-faint)" fontSize="9.5" textAnchor="middle">
+        breakeven {fmtMoney(basis, 0)}
       </text>
       {/* payoff curve */}
       <polyline
         points={pts.join(" ")}
         fill="none"
         stroke="var(--color-accent)"
-        strokeWidth="1.8"
+        strokeWidth="2"
         strokeLinejoin="round"
       />
-      {/* max-profit cap label */}
+      {/* cap callout */}
       <text
         x={W - padR}
-        y={y(maxProfit) - 4}
+        y={y(maxProfit) - 5}
         fill="var(--color-faint)"
-        fontSize="9"
+        fontSize="9.5"
         textAnchor="end"
-        className="font-mono"
       >
-        cap {fmtMoney(maxProfit)}/sh
+        capped at {fmtMoney(maxProfit)}/sh
       </text>
     </svg>
   );
