@@ -5,6 +5,33 @@ captures the research, the sourced decision rules, the truthfulness guardrails t
 build honored, and the multi-agent process that produced it. Read this before
 making non-trivial changes.
 
+> **Visual overhaul (2026-06-25) — CURRENT direction is the "light research note."**
+> Sections 2–3 below describe the *original* dark "trading-terminal" build. The app
+> was then re-skinned (a second 7-agent research + critique workflow) to a **light,
+> navy-anchored, Big-4 / consulting-grade "published research note"** — the look an
+> IB/HF recruiter benchmarks against a JPM *Guide to the Markets* or a McKinsey
+> exhibit. What changed, and is now LIVE:
+> - **Light** warm-white canvas (`#FAFAF8`), ONE navy anchor (`#00337C`) + ONE
+>   burnt-orange risk tone (`#B3471B`) + a cool-grey ramp. The 5-hue action palette
+>   (enter/hold/roll/exit/neutral) collapsed to three families: navy = enter/act,
+>   orange = roll/close/risk, grey = hold/neutral. Redundant word+glyph encoding is
+>   kept, so zero colorblind-safety loss. Tokens in `globals.css @theme`.
+> - **Editorial serif** (Newsreader, via `next/font`) on the masthead, section +
+>   action titles, and the hero number; Inter for all data; Roboto Mono demoted to
+>   scan-table numeric cells + OCC symbols only. Headings are **assertions**
+>   ("Covered calls trailed buy-and-hold by 2.4 pts"), not topics.
+> - **Charts replace prose**: yield-vs-2%-target bullets, assignment-risk bars,
+>   ranked benchmark bars, a covered/uncovered split, the restyled payoff curve
+>   (`src/components/charts.tsx`). The per-card rationale/reason/house-rule
+>   triple-stack moved into the card's progressive-disclosure expand.
+> - **Disclosure with restraint**: deleted the blocking disclaimer modal + the
+>   STALE/indicative/generated/polling chrome + pulse/shimmer motion. The truthful
+>   minimum now lives in one masthead line (`As of {date} · modeled, delayed
+>   quotes`), per-exhibit source lines, a one-line footer, and the full
+>   **Methodology & Disclosures appendix** at `/disclosures`. All quant rigor
+>   (QCC/tax/assignment-probability/foregone-upside/payoff) is PRESERVED behind the
+>   expand — tiered, never deleted, because that depth is the actual differentiator.
+
 ---
 
 ## 1. How this was built (the process)
