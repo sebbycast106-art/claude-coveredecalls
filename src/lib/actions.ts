@@ -145,6 +145,9 @@ export const TRIGGER_LABEL: Record<ActionTrigger, string> = {
   STRIKE_BELOW_BASIS: "no strike clears your cost basis",
   ASSIGNMENT_RISK_CEILING: "every safe strike exceeds the assignment-risk ceiling",
   NO_LIQUID_STRIKE: "no liquid strike at a worthwhile premium",
+  ASSIGNMENT_ESCAPE: "assignment odds climbing — roll up and out to escape",
+  DEPRESSED_UNDERLYING: "house rule: don't write below the 50-day average",
+  HIGH_IV_WEAK_TAPE: "extreme IV with a weak tape — don't cap a rebound",
   NONE: "",
 };
 
