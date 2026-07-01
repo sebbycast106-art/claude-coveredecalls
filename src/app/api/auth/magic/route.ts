@@ -25,8 +25,21 @@ function clientIp(request: Request): string {
   return request.headers.get("x-real-ip") ?? "local";
 }
 
+// Behind Railway's proxy, request.url is the internal http://localhost:8080 — so
+// redirect targets must be rebuilt from the public forwarded host, or the browser
+// would be sent to localhost and the magic link would dead-end.
+function publicBase(request: Request): string {
+  const proto = request.headers.get("x-forwarded-proto") ?? "https";
+  const host =
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    new URL(request.url).host;
+  return `${proto}://${host}`;
+}
+
 export async function GET(request: Request) {
-  const loginUrl = new URL("/login", request.url);
+  const base = publicBase(request);
+  const loginUrl = new URL("/login", base);
 
   // Over the limit: redirect generically, reveal nothing, set no cookie.
   if (rateLimited(clientIp(request))) {
@@ -47,5 +60,5 @@ export async function GET(request: Request) {
 
   // 302 to the owner view (not a JSON 200, so email link-preview/prefetch bots
   // don't scrape a body) and mint the normal 7-day owner session on it.
-  return setSession(NextResponse.redirect(new URL("/", request.url)), "owner");
+  return setSession(NextResponse.redirect(new URL("/", base)), "owner");
 }
