@@ -7,10 +7,11 @@ import type { Action, ActionTrigger } from "@/lib/contract";
 // zero CVD loss): navy = open a new call, orange = modify/exit (risk), grey =
 // hold / nothing to do.
 
-export type Tone = "enter" | "risk" | "neutral";
+export type Tone = "enter" | "risk" | "neutral" | "hold";
 
 export interface ActionMeta {
   label: string;
+  verb: string; // the short, confident giant-verb shown on the Dawn card
   ownerVerb: string;
   framing: string;
   tone: Tone;
@@ -20,6 +21,7 @@ export interface ActionMeta {
 export const ACTION_META: Record<Action, ActionMeta> = {
   ENTER: {
     label: "Sell to Open",
+    verb: "Sell this",
     ownerVerb: "Consider selling to open a new covered call",
     framing: "Not in a call — a write looks worthwhile",
     tone: "enter",
@@ -28,13 +30,15 @@ export const ACTION_META: Record<Action, ActionMeta> = {
   },
   HOLD: {
     label: "Hold",
+    verb: "Hold",
     ownerVerb: "Keep the open call — no action needed",
     framing: "In a call — stay in it",
-    tone: "neutral",
+    tone: "hold",
     iconPath: "M15.75 5.25v13.5m-7.5-13.5v13.5",
   },
   ROLL: {
     label: "Roll",
+    verb: "Roll it",
     ownerVerb: "Consider rolling — buy to close, then sell a later call",
     framing: "In a call — move it, for a net credit",
     tone: "risk",
@@ -43,6 +47,7 @@ export const ACTION_META: Record<Action, ActionMeta> = {
   },
   CLOSE: {
     label: "Buy to Close",
+    verb: "Close it",
     ownerVerb: "Consider buying to close — take the win, no replacement",
     framing: "In a call — get out of it",
     tone: "risk",
@@ -51,20 +56,23 @@ export const ACTION_META: Record<Action, ActionMeta> = {
   },
   LET_ASSIGN: {
     label: "Let Assign",
+    verb: "Let it assign",
     ownerVerb: "Hold into assignment on purpose — the tax-smart exit",
     framing: "In a call — let it assign (tax-preferred)",
-    tone: "neutral",
+    tone: "hold",
     iconPath: "M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
   },
   STAND_ASIDE: {
     label: "No Trade",
+    verb: "Hold",
     ownerVerb: "Nothing worth writing this cycle",
     framing: "Not in a call — and not worth entering yet",
-    tone: "neutral",
+    tone: "hold",
     iconPath: "M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
   },
   NO_TRADE: {
     label: "No Trade",
+    verb: "Hold",
     ownerVerb: "Stand down — data was degraded this cycle",
     framing: "No reliable read this cycle",
     tone: "neutral",
@@ -108,12 +116,21 @@ export const TONE_CLASSES: Record<
     text: "text-muted",
     on: "text-muted",
   },
+  hold: {
+    rail: "bg-hold",
+    badgeBg: "bg-hold-soft",
+    badgeText: "text-hold",
+    badgeBorder: "border-hold/25",
+    text: "text-hold",
+    on: "text-hold",
+  },
 };
 
 export const TONE_VAR: Record<Tone, string> = {
   enter: "var(--color-accent)",
   risk: "var(--color-risk)",
   neutral: "var(--color-line-strong)",
+  hold: "var(--color-hold)",
 };
 
 // House-rule label for the trigger that fired — used in the methodology appendix,

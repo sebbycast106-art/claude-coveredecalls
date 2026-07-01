@@ -50,7 +50,7 @@ export function TopBar({ data }: { data: CoveredCallsPayload | undefined }) {
           <div className="flex items-center gap-5">
             {asOf && (
               <span className="hidden sm:block text-[11.5px] text-faint tnum leading-none">
-                As of {fmtDateLong(asOf)} · modeled, delayed quotes
+                As of {fmtDateLong(asOf)}
               </span>
             )}
             <button

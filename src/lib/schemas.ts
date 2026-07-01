@@ -28,6 +28,15 @@ const RecommendationCore = z
     headline: z.string().optional(),
     open_call: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
     roll_target: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+    // Trend fields — validated defensively so a malformed push can't store a
+    // non-array (or wrong-typed value) the price chart would then choke on.
+    recent_closes: z.array(z.number()).nullable().optional(),
+    sma_50: z.number().nullable().optional(),
+    sma_200: z.number().nullable().optional(),
+    week_high: z.number().nullable().optional(),
+    week_low: z.number().nullable().optional(),
+    pct_vs_sma_50: z.number().nullable().optional(),
+    underlying_depressed: z.boolean().nullable().optional(),
   })
   .passthrough();
 

@@ -1,4 +1,4 @@
-import { fmtPctSigned } from "@/lib/format";
+import { fmtMoney, fmtMoney0, fmtPctSigned } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 // All charts are pure CSS/SVG (no chart lib). Light-mode: accent one series,
@@ -53,6 +53,150 @@ export function CoveredBar({ covered, total }: { covered: number; total: number 
     <div className="flex h-2 w-full overflow-hidden rounded-sm bg-sunken">
       <div className="bg-accent" style={{ width: `${pct * 100}%` }} />
     </div>
+  );
+}
+
+// ── Dawn price chart — recent closes vs the 50-day, with the "your cap" strike ─
+// The picture that shows WHY it's a hold: the price line sliding under its 50-day
+// (and under the dotted strike you'd sell at). Pure inline SVG, no library. Draws
+// on once, then holds still (reduced-motion → instant). Hides itself when the
+// price series is absent (demo before it's seeded, or an engine push pre-trend).
+export function DawnPriceChart({
+  recent_closes,
+  sma_50,
+  strike,
+  height = 132,
+}: {
+  recent_closes: number[] | null | undefined;
+  sma_50: number | null | undefined;
+  strike?: number | null;
+  height?: number;
+}) {
+  if (!Array.isArray(recent_closes) || recent_closes.length < 5) return null;
+  const closes = recent_closes;
+  const n = closes.length;
+  const W = 640;
+  const H = 160;
+  const padL = 10;
+  const padR = 70;
+  const padT = 16;
+  const padB = 16;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const baseline = padT + plotH;
+
+  const vals = [...closes];
+  if (sma_50 != null && Number.isFinite(sma_50)) vals.push(sma_50);
+  if (strike != null && Number.isFinite(strike)) vals.push(strike);
+  let min = Math.min(...vals);
+  let max = Math.max(...vals);
+  if (max === min) max = min + 1;
+  const pad = (max - min) * 0.06;
+  min -= pad;
+  max += pad;
+
+  const x = (i: number) => padL + (i / (n - 1)) * plotW;
+  const y = (v: number) => padT + (1 - (v - min) / (max - min)) * plotH;
+
+  const pts = closes.map((c, i) => `${x(i).toFixed(1)},${y(c).toFixed(1)}`);
+  const area = `M ${x(0).toFixed(1)},${baseline} L ${pts.join(" L ")} L ${x(n - 1).toFixed(1)},${baseline} Z`;
+  const line = `M ${pts.join(" L ")}`;
+  const last = closes[n - 1];
+  const lastX = x(last === undefined ? 0 : n - 1);
+  const lastY = y(last);
+  const smaY = sma_50 != null && Number.isFinite(sma_50) ? y(sma_50) : null;
+  const strikeIn =
+    strike != null && Number.isFinite(strike) && strike >= min && strike <= max ? y(strike) : null;
+  const gid = `dawnfill-${Math.round((sma_50 ?? 0) * 100)}-${n}`;
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      height={height}
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={`Price over the last ${n} sessions versus its 50-day average${strike != null ? ` and the $${Math.round(strike)} strike` : ""}`}
+    >
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="var(--color-accent)" stopOpacity="0.16" />
+          <stop offset="1" stopColor="var(--color-accent)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#${gid})`} />
+      {smaY != null && (
+        <>
+          <line
+            x1={padL}
+            y1={smaY}
+            x2={padL + plotW}
+            y2={smaY}
+            stroke="var(--color-muted)"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+            opacity="0.7"
+          />
+          <text
+            x={padL + plotW + 6}
+            y={smaY + 3.5}
+            fill="var(--color-muted)"
+            fontSize="10.5"
+            fontFamily="var(--font-sans)"
+          >
+            50-day {fmtMoney0(sma_50)}
+          </text>
+        </>
+      )}
+      {strikeIn != null && (
+        <>
+          <line
+            x1={padL}
+            y1={strikeIn}
+            x2={padL + plotW}
+            y2={strikeIn}
+            stroke="var(--color-accent)"
+            strokeWidth="1"
+            strokeDasharray="1 4"
+            opacity="0.8"
+          />
+          <text
+            x={padL + plotW + 6}
+            y={strikeIn + 3.5}
+            fill="var(--color-accent)"
+            fontSize="10.5"
+            fontFamily="var(--font-sans)"
+          >
+            cap {fmtMoney0(strike)}
+          </text>
+        </>
+      )}
+      <path
+        d={line}
+        fill="none"
+        stroke="var(--color-accent)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        pathLength={1}
+        strokeDasharray="1"
+        className="animate-line"
+        style={{ ["--dash" as string]: "1" } as React.CSSProperties}
+      />
+      <circle cx={lastX} cy={lastY} r="7" fill="var(--dawn-gold)" opacity="0.35" />
+      <circle cx={lastX} cy={lastY} r="3.5" fill="var(--color-accent)" />
+      <text
+        x={lastX - 6}
+        y={lastY - 9}
+        fill="var(--color-ink)"
+        fontSize="12"
+        fontWeight="500"
+        textAnchor="end"
+        fontFamily="var(--font-sans)"
+      >
+        {fmtMoney(last)}
+      </text>
+    </svg>
   );
 }
 

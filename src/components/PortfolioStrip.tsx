@@ -1,46 +1,9 @@
 import { CoveredBar } from "@/components/charts";
 import { Eyebrow } from "@/components/ui";
 import type { Performance, Portfolio } from "@/lib/contract";
-import { fmtMoney0, fmtPct0, fmtPctSigned } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { fmtMoney0, fmtPctSigned } from "@/lib/format";
 
-function Tile({
-  label,
-  value,
-  sub,
-  lead,
-  muted,
-}: {
-  label: string;
-  value: React.ReactNode;
-  sub?: React.ReactNode;
-  lead?: boolean;
-  muted?: boolean;
-}) {
-  return (
-    <div className="flex gap-3 px-5 py-4">
-      <div
-        className={cn(
-          "w-[2px] shrink-0 self-stretch rounded-full",
-          lead ? "bg-accent" : "bg-transparent"
-        )}
-      />
-      <div className="flex-1 min-w-0">
-        <Eyebrow>{label}</Eyebrow>
-        <div
-          className={cn(
-            "mt-2 text-[22px] leading-none font-semibold tnum",
-            muted ? "text-faint" : "text-ink"
-          )}
-        >
-          {value}
-        </div>
-        {sub && <div className="mt-2 text-[11.5px] text-faint">{sub}</div>}
-      </div>
-    </div>
-  );
-}
-
+// "State of the book" — one warm sentence, never a row of dashed zero-tiles.
 export function PortfolioStrip({
   portfolio,
   performance,
@@ -54,50 +17,47 @@ export function PortfolioStrip({
   const cc = performance.covered_call_total_return;
   const bh = performance.buyhold_return;
 
+  const pct = portfolio ? Math.round(portfolio.pct_book_covered * 100) : 0;
+  const covered = portfolio?.covered_shares ?? 0;
+  const total = portfolio?.total_shares ?? 0;
+  const open = portfolio?.open_call_count ?? 0;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 rounded-lg border border-line bg-surface exhibit divide-y sm:divide-y-0 sm:divide-x divide-line">
-      <Tile
-        lead
-        label="Premium Collected"
-        value={hasRealized ? fmtMoney0(realized) : "—"}
-        sub={hasRealized ? "realized to date, net of buybacks" : "No realized history yet"}
-        muted={!hasRealized}
-      />
-      <Tile
-        label="Book Covered"
-        value={portfolio ? fmtPct0(portfolio.pct_book_covered) : "—"}
-        sub={
-          portfolio ? (
-            <div className="space-y-1.5">
-              <CoveredBar covered={portfolio.covered_shares} total={portfolio.total_shares} />
-              <span className="tnum">
-                {portfolio.covered_shares.toLocaleString()} /{" "}
-                {portfolio.total_shares.toLocaleString()} sh · {portfolio.open_call_count} open
-              </span>
-            </div>
-          ) : undefined
-        }
-      />
-      <Tile
-        label="Return vs Buy & Hold"
-        value={cc != null ? fmtPctSigned(cc) : "—"}
-        muted={cc == null}
-        sub={
-          bh != null ? (
-            <span className="tnum">
-              buy &amp; hold {fmtPctSigned(bh)}
-              {cc != null && (
-                <span className={cn("ml-1.5", cc - bh >= 0 ? "text-pos" : "text-neg")}>
-                  ({cc - bh >= 0 ? "+" : "−"}
-                  {Math.abs((cc - bh) * 100).toFixed(1)} pts)
-                </span>
-              )}
-            </span>
-          ) : (
-            "benchmark pending"
-          )
-        }
-      />
+    <div className="rounded-xl border border-line bg-surface exhibit px-6 py-5">
+      <Eyebrow>State of the book</Eyebrow>
+      <p className="mt-2 font-serif font-normal text-[20px] text-ink leading-snug tracking-[-0.01em]">
+        {portfolio ? (
+          <>
+            Your book is <span className="tnum">{pct}%</span> covered —{" "}
+            <span className="tnum">{covered.toLocaleString()}</span> of{" "}
+            <span className="tnum">{total.toLocaleString()}</span> shares working
+            {open > 0 ? (
+              <>
+                {" "}
+                · <span className="tnum">{open}</span> {open === 1 ? "call" : "calls"} open
+              </>
+            ) : (
+              <> · no calls open right now</>
+            )}
+            .
+          </>
+        ) : (
+          "Your positions load once the engine publishes."
+        )}
+      </p>
+      {portfolio && total > 0 && (
+        <div className="mt-3 max-w-md">
+          <CoveredBar covered={covered} total={total} />
+        </div>
+      )}
+      <p className="mt-3 text-[13.5px] text-muted leading-relaxed">
+        {hasRealized
+          ? `${fmtMoney0(realized)} in premium banked so far this cycle.`
+          : "No premium banked yet this cycle — that's expected on the quiet stretches."}
+        {cc != null && bh != null
+          ? ` Covered-call ${fmtPctSigned(cc)} vs. simply holding ${fmtPctSigned(bh)}.`
+          : " The vs-holding benchmark fills in as real history accrues."}
+      </p>
     </div>
   );
 }

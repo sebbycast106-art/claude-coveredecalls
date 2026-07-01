@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { AssignmentRiskBar, YieldBullet } from "@/components/charts";
+import { AssignmentRiskBar, DawnPriceChart } from "@/components/charts";
 import { PayoffDiagram } from "@/components/PayoffDiagram";
 import {
-  ActionBadge,
+  ActionGlyph,
   BelowTargetChip,
   EventBadge,
   ExposureBadge,
@@ -12,7 +12,6 @@ import {
   Pill,
   QccBadge,
   RiskPill,
-  SectionTitle,
 } from "@/components/ui";
 import { ACTION_META, TONE_VAR, TRIGGER_LABEL } from "@/lib/actions";
 import type { Recommendation } from "@/lib/contract";
@@ -45,11 +44,11 @@ function Metric({
   return (
     <div className="flex flex-col gap-1.5">
       <Eyebrow>{label}</Eyebrow>
-      <span className={cn("text-[15px] font-semibold tnum text-ink leading-none", valueClass)}>
+      <span className={cn("text-[16px] font-semibold tnum text-ink leading-none", valueClass)}>
         {value}
       </span>
       {chart}
-      {sub && <span className="text-[10.5px] text-faint tnum leading-none">{sub}</span>}
+      {sub && <span className="text-[11px] text-faint tnum leading-none">{sub}</span>}
     </div>
   );
 }
@@ -88,7 +87,7 @@ function ProfitBar({ pct }: { pct: number }) {
             className="h-full rounded-full"
             style={{
               width: `${w * 100}%`,
-              backgroundColor: underwater ? "var(--color-risk)" : "var(--color-accent)",
+              backgroundColor: underwater ? "var(--color-risk)" : "var(--color-hold)",
             }}
           />
         </div>
@@ -116,33 +115,37 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
   const quiet = rec.action === "STAND_ASIDE" || rec.action === "NO_TRADE";
   const human =
     parseOcc(rec.contract_symbol)?.human ?? contractLabel(rec.ticker, rec.strike, rec.expiry);
+  const chartStrike = oc?.open_strike ?? rec.strike ?? null;
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-line bg-surface exhibit">
+    <div className="relative overflow-hidden rounded-xl border border-line bg-surface exhibit">
       <div
         className="absolute left-0 top-0 bottom-0 w-[3px]"
         style={{ backgroundColor: accent }}
         aria-hidden="true"
       />
-      <div className="pl-6 pr-5 py-5">
+      <div className="pl-7 pr-6 py-6">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-lg font-semibold text-ink tracking-tight">{rec.ticker}</span>
-            <Pill className={cn("border-line bg-sunken", isOpenPos ? "text-muted" : "text-faint")}>
-              {isOpenPos ? "Call open" : "Flat"}
-            </Pill>
-            {rec.urgency === "ACT_TODAY" && (
-              <Pill className="border-risk/25 bg-risk-soft text-risk">Act today</Pill>
-            )}
-          </div>
-          <ActionBadge action={rec.action} />
+        <div className="flex items-center gap-2.5">
+          <span className="text-[17px] font-semibold text-ink tracking-tight">{rec.ticker}</span>
+          <Pill className={cn("border-line bg-sunken", isOpenPos ? "text-muted" : "text-faint")}>
+            {isOpenPos ? "Call open" : "Flat"}
+          </Pill>
+          {rec.urgency === "ACT_TODAY" && (
+            <Pill className="border-risk/25 bg-risk-soft text-risk">Act today</Pill>
+          )}
         </div>
 
-        {/* Serif assertion headline */}
-        <SectionTitle as="h3" className="mt-3 text-[18px] leading-snug">
-          {rec.headline}
-        </SectionTitle>
+        {/* The one answer — giant serif verb */}
+        <div className="mt-2 flex items-center gap-2.5" style={{ color: accent }}>
+          <ActionGlyph action={rec.action} className="w-6 h-6 shrink-0" strokeWidth={1.75} />
+          <span className="font-serif font-normal tracking-[-0.01em] leading-none text-[clamp(30px,5vw,38px)]">
+            {meta.verb}
+          </span>
+        </div>
+
+        {/* The reason — the engine's own sentence, verbatim */}
+        <p className="mt-3 text-[17px] leading-snug text-ink max-w-2xl">{rec.headline}</p>
 
         {/* Badges */}
         {(!quiet || rec.st_shares_written > 0 || rec.ex_div_before_expiry) && (
@@ -155,13 +158,20 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
           </div>
         )}
 
-        {/* Body */}
-        {quiet ? (
-          <p className="mt-4 text-[13px] leading-relaxed text-muted max-w-2xl">
-            {rec.no_trade_reason ?? rec.rationale}
-          </p>
-        ) : !isOpenPos ? (
-          <div className="mt-4 space-y-4">
+        {/* Price chart spine — the picture of why */}
+        {Array.isArray(rec.recent_closes) && rec.recent_closes.length >= 5 && (
+          <div className="mt-5 rounded-lg border border-line bg-sunken/60 px-3 pt-2 pb-1">
+            <DawnPriceChart
+              recent_closes={rec.recent_closes}
+              sma_50={rec.sma_50}
+              strike={chartStrike}
+            />
+          </div>
+        )}
+
+        {/* Per-verb supporting strip (never a zero-filled grid on a quiet day) */}
+        {quiet ? null : !isOpenPos ? (
+          <div className="mt-5 space-y-4">
             <div className="flex items-center gap-2 text-[13px]">
               <span className="text-ink font-medium">{human}</span>
               {rec.contract_symbol && <CopySymbol symbol={rec.contract_symbol} />}
@@ -175,7 +185,6 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
               <Metric
                 label="Monthly yield"
                 value={fmtPct1(rec.monthly_yield)}
-                chart={<YieldBullet monthly={rec.monthly_yield} />}
                 sub={`${fmtPct0(rec.annualized_yield)} annualized`}
                 valueClass={rec.below_target ? "text-risk" : undefined}
               />
@@ -186,14 +195,14 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
                 sub={`Δ ${fmtNum(rec.delta)}`}
               />
               <Metric
-                label="Breakeven"
-                value={fmtMoney(rec.breakeven)}
-                sub={`spot ${fmtMoney(rec.spot)}`}
+                label="Upside surrendered"
+                value={fmtMoney(rec.foregone_upside_total, 0)}
+                sub="if it runs past the cap"
               />
             </MetricGrid>
           </div>
         ) : (
-          <div className="mt-4 space-y-4">
+          <div className="mt-5 space-y-4">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
               <span className="text-ink font-medium">
                 Short {oc.open_contracts}×{" "}
@@ -229,7 +238,7 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
             </MetricGrid>
 
             {rt && (
-              <div className="rounded-md border border-line bg-sunken px-4 py-3">
+              <div className="rounded-lg border border-line bg-sunken px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 text-[12.5px]">
                     <div>
@@ -273,7 +282,7 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
             )}
 
             {rec.action === "LET_ASSIGN" && (
-              <div className="rounded-md border border-line bg-sunken px-4 py-2.5 text-[12.5px] text-muted">
+              <div className="rounded-lg border border-line bg-hold-soft px-4 py-2.5 text-[12.5px] text-hold">
                 Assignment proceeds ≈ {fmtMoney(oc.open_strike + oc.entry_premium_per_share, 2)}/sh
                 (strike + premium), realized at the long-term rate.
               </div>
@@ -281,31 +290,32 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
           </div>
         )}
 
-        {/* Progressive disclosure — payoff + the tiered rigor (rationale/why) */}
+        {/* Progressive disclosure — payoff + the tiered rigor */}
         {!quiet && (
           <>
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="mt-4 text-[11.5px] text-muted hover:text-accent transition-colors"
+              className="mt-4 text-[12px] text-muted hover:text-accent transition-colors"
             >
-              {open ? "Hide detail ▲" : "Payoff & detail ▼"}
+              {open ? "Hide the detail ▲" : "Why this call ▼"}
             </button>
             {open && (
               <div className="mt-3 grid lg:grid-cols-2 gap-4 animate-fadeIn">
-                <div className="rounded-md border border-line bg-sunken p-3">
+                <div className="rounded-lg border border-line bg-sunken p-3">
                   <Eyebrow>Payoff at expiration</Eyebrow>
                   <div className="mt-2">
                     <PayoffDiagram rec={rec} />
                   </div>
                 </div>
-                <div className="rounded-md border border-line bg-sunken p-3">
+                <div className="rounded-lg border border-line bg-sunken p-3">
                   <Eyebrow>Detail</Eyebrow>
                   <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2.5 text-[12px]">
                     <DetailItem
                       label="Upside surrendered"
                       value={fmtMoney(rec.foregone_upside_total, 0)}
                     />
+                    <DetailItem label="Breakeven" value={fmtMoney(rec.breakeven)} />
                     <DetailItem label="Prior close" value={fmtMoney(rec.prior_close)} />
                     <DetailItem
                       label="Engine rank score"
@@ -320,12 +330,6 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
                       <DetailItem
                         label="Cost to close"
                         value={fmtMoney(oc.cost_to_close_total, 0)}
-                      />
-                    )}
-                    {oc && (
-                      <DetailItem
-                        label="Extrinsic left"
-                        value={`${fmtMoney(oc.extrinsic_value_remaining)}/sh`}
                       />
                     )}
                   </dl>

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import { cookies } from "next/headers";
-import { COOKIE_NAME, signToken } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { setSession } from "@/lib/auth";
 import { LoginSchema } from "@/lib/schemas";
 
 // Lightweight per-IP rate limit (single-instance personal app). 5 attempts /
@@ -28,18 +28,6 @@ function clientIp(request: Request): string {
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function setSession(role: "owner" | "demo") {
-  const token = await signToken({ auth: true, role });
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 7 * 24 * 3600,
-  });
-}
-
 export async function POST(request: Request) {
   if (rateLimited(clientIp(request))) {
     return Response.json({ error: "Too many attempts — wait a few minutes." }, { status: 429 });
@@ -57,8 +45,7 @@ export async function POST(request: Request) {
   // owner, EXCEPT the literal "demo" which loads the demo dataset (for testing
   // the shared-link experience without provisioning hashes).
   if (!ownerHash && !demoHash) {
-    await setSession(password === "demo" ? "demo" : "owner");
-    return Response.json({ ok: true });
+    return setSession(NextResponse.json({ ok: true }), password === "demo" ? "demo" : "owner");
   }
 
   let role: "owner" | "demo" | null = null;
@@ -75,6 +62,5 @@ export async function POST(request: Request) {
     return Response.json({ error: "Incorrect access code" }, { status: 403 });
   }
 
-  await setSession(role);
-  return Response.json({ ok: true });
+  return setSession(NextResponse.json({ ok: true }), role);
 }

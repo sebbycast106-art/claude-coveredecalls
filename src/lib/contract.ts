@@ -105,6 +105,16 @@ export interface Recommendation {
   ex_div_before_expiry: boolean;
   earnings_before_expiry: boolean;
 
+  // Trend / price-history fields the engine pushes for the price chart.
+  // Nullable: absent on data-degraded rows or when history is unavailable.
+  recent_closes: number[] | null;
+  sma_50: number | null;
+  sma_200: number | null;
+  week_high: number | null;
+  week_low: number | null;
+  pct_vs_sma_50: number | null;
+  underlying_depressed: boolean | null;
+
   open_call: OpenCall | null;
   roll_target: RollTarget | null;
 

@@ -1,35 +1,44 @@
 @import "tailwindcss";
 
-/* ── Premia — "published research note" (light, navy-anchored) ───────────────
-   A finished, dated analysis a Big-4 analyst would publish. Depth from hairlines
-   + one soft shadow, never boxes/tints. ONE navy anchor + ONE burnt-orange risk
-   tone + a cool-grey ramp. Color always pairs with a word/glyph + a sign. */
+/* ── Premia — "Dawn" (warm sunrise, indigo-to-amber) ─────────────────────────
+   A finished, dated analysis a Big-4 analyst would publish — now at first light.
+   Depth from hairlines + one soft shadow, never boxes/tints. ONE burnt-terracotta
+   anchor + ONE clay risk tone + a warm-taupe ramp, over a sunrise gradient reserved
+   for the hero. Color always pairs with a word/glyph + a sign. */
 @theme {
   /* Paper */
-  --color-canvas: #fafaf8; /* warm near-white app base */
-  --color-surface: #ffffff; /* exhibits / cards / tables */
-  --color-sunken: #f2f3f5; /* wells, table band, chart insets */
+  --color-canvas: #FBF6F0; /* warm near-white app base */
+  --color-surface: #FFFAF4; /* exhibits / cards / tables */
+  --color-sunken: #F4EBE1; /* wells, table band, chart insets */
 
   /* Ink ramp */
-  --color-ink: #15191f; /* headlines, primary numbers, verbs */
-  --color-muted: #5b6470; /* secondary metrics, body */
-  --color-faint: #8a929e; /* units, eyebrows, source lines */
+  --color-ink: #241D2E; /* headlines, primary numbers, verbs */
+  --color-muted: #6A5F6E; /* secondary metrics, body */
+  --color-faint: #9A8F9C; /* units, eyebrows, source lines */
 
   /* Structure */
-  --color-line: #e4e7eb; /* hairlines, row rules */
-  --color-line-strong: #cbd1d9; /* baselines, chart reference lines */
+  --color-line: #ECDFD2; /* hairlines, row rules */
+  --color-line-strong: #D9C7BB; /* baselines, chart reference lines */
 
   /* The one anchor */
-  --color-accent: #00337c; /* KPMG/McKinsey deep navy */
-  --color-accent-soft: #e8eef7; /* faint navy wash */
+  --color-accent: #B5541F; /* burnt terracotta */
+  --color-accent-soft: #FBEADD; /* faint terracotta wash */
 
-  /* The one risk/caution tone (CVD-safe vs navy on the blue↔orange axis) */
-  --color-risk: #b3471b;
-  --color-risk-soft: #fbede6;
+  /* The one risk/caution tone (CVD-safe vs accent on the warm↔cool axis) */
+  --color-risk: #B83232;
+  --color-risk-soft: #FBE4E2;
 
   /* P/L — only where direction is the point, always with a sign */
-  --color-pos: #1f7a4d;
-  --color-neg: #b3471b;
+  --color-pos: #2F7A52;
+  --color-neg: #B83232;
+
+  /* Calm sage "nothing to do" family — HOLD / LET_ASSIGN / STAND_ASIDE */
+  --color-hold: #4C7C5A;
+  --color-hold-soft: #E6F0E8;
+
+  /* Sunrise — indigo → violet → rose → amber. Reserved for the hero. */
+  --dawn-gradient: linear-gradient(160deg, #3A2F6B 0%, #6B4A8F 34%, #D98A8A 68%, #F2B06A 100%);
+  --dawn-gold: #F6C76B; /* radial halo behind the hero number */
 
   /* Type — editorial serif display + Inter data + mono (tables/symbols only) */
   --font-sans: var(--font-inter), -apple-system, "Segoe UI", system-ui, sans-serif;
@@ -60,11 +69,11 @@ body {
   font-feature-settings: "tnum", "zero";
 }
 
-/* Exhibit elevation — one soft shadow on white (no heavy border). */
+/* Exhibit elevation — one soft warm shadow on surface (no heavy border). */
 .exhibit {
   box-shadow:
-    0 1px 2px rgba(21, 25, 31, 0.05),
-    0 6px 16px rgba(21, 25, 31, 0.04);
+    0 1px 2px rgba(74, 46, 28, 0.06),
+    0 6px 16px rgba(74, 46, 28, 0.05);
 }
 
 *:focus-visible {
@@ -90,5 +99,58 @@ body {
 
 /* Static light placeholder — no shimmer/motion (a deliverable doesn't pulse). */
 .skeleton {
-  background: #eef0f2;
+  background: #F3EADF;
+}
+
+/* ── Dawn — hero sunrise + one-shot entrance motion ──────────────────────────
+   The gradient wash and gold halo are reserved for the hero; charts get a single
+   line-draw on mount. All motion runs ONCE and is silenced under reduced-motion
+   (a deliverable doesn't pulse). */
+.dawn-wash {
+  background: var(--dawn-gradient);
+}
+
+/* Soft radial gold halo bloomed behind the hero number. */
+.hero-glow {
+  background: radial-gradient(
+    60% 60% at 50% 45%,
+    color-mix(in oklab, var(--dawn-gold) 55%, transparent) 0%,
+    color-mix(in oklab, var(--dawn-gold) 22%, transparent) 45%,
+    transparent 72%
+  );
+}
+
+@keyframes glowBloom {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lineDraw {
+  from {
+    stroke-dashoffset: var(--dash, 1000);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-glow {
+  animation: glowBloom 1.2s ease-out;
+}
+
+.animate-line {
+  animation: lineDraw 800ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-glow,
+  .animate-line {
+    animation: none !important;
+  }
 }
