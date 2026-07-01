@@ -14,7 +14,7 @@
   /* Ink ramp */
   --color-ink: #241D2E; /* headlines, primary numbers, verbs */
   --color-muted: #6A5F6E; /* secondary metrics, body */
-  --color-faint: #9A8F9C; /* units, eyebrows, source lines */
+  --color-faint: #726576; /* units, eyebrows, source lines — AA on warm surfaces */
 
   /* Structure */
   --color-line: #ECDFD2; /* hairlines, row rules */
@@ -150,7 +150,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-glow,
-  .animate-line {
+  .animate-line,
+  .animate-fadeIn {
     animation: none !important;
   }
 }

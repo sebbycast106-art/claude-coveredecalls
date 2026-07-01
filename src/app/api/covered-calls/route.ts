@@ -79,7 +79,10 @@ export async function GET() {
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const now = new Date().toISOString();
-  const role = session.role === "demo" ? "demo" : "owner";
+  // Fail CLOSED to demo: only an explicit owner role sees real positions, so a
+  // malformed/unexpected role can never leak the real book (defence in depth —
+  // login and the magic route only ever mint "owner" or "demo").
+  const role = session.role === "owner" ? "owner" : "demo";
 
   // DEMO role: serve fabricated data only. Real positions never reach this path.
   if (role === "demo") {

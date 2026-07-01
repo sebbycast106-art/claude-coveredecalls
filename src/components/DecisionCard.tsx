@@ -112,7 +112,14 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
   const oc = rec.open_call;
   const rt = rec.roll_target;
   const isOpenPos = oc != null;
-  const quiet = rec.action === "STAND_ASIDE" || rec.action === "NO_TRADE";
+  // "Quiet" = render the reason prose alone, never a grid of dashes. STAND_ASIDE /
+  // NO_TRADE are always quiet; a HOLD/LET_ASSIGN with no open-call payload has no
+  // write-side numbers either, so it falls here too (defensive — the fresh-write
+  // grid would otherwise render four "—" zero-boxes).
+  const quiet =
+    rec.action === "STAND_ASIDE" ||
+    rec.action === "NO_TRADE" ||
+    ((rec.action === "HOLD" || rec.action === "LET_ASSIGN") && oc == null);
   const human =
     parseOcc(rec.contract_symbol)?.human ?? contractLabel(rec.ticker, rec.strike, rec.expiry);
   const chartStrike = oc?.open_strike ?? rec.strike ?? null;
@@ -148,7 +155,10 @@ export function DecisionCard({ rec }: { rec: Recommendation }) {
         <p className="mt-3 text-[17px] leading-snug text-ink max-w-2xl">{rec.headline}</p>
 
         {/* Badges */}
-        {(!quiet || rec.st_shares_written > 0 || rec.ex_div_before_expiry) && (
+        {(!quiet ||
+          rec.st_shares_written > 0 ||
+          rec.ex_div_before_expiry ||
+          rec.earnings_before_expiry) && (
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             {!quiet && <QccBadge qualified={rec.qcc_qualified} itm={oc?.qcc_currently_itm} />}
             <ExposureBadge st={rec.st_shares_written} />

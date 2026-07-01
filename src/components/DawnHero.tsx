@@ -1,7 +1,6 @@
 import { DawnPriceChart } from "@/components/charts";
 import type { Recommendation } from "@/lib/contract";
 import { fmtMoney, fmtPctSigned } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
 // The living sunrise hero. The one glowing number is the primary underlying's
 // SPOT (a real price) — never the premium sum that collapses to "—", never the
@@ -32,12 +31,7 @@ export function DawnHero({ rec }: { rec: Recommendation | null }) {
             {eyebrow} · {rec.ticker}
           </span>
           {dayMove != null && (
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-1 text-[13px] font-semibold tnum text-white",
-                dayMove >= 0 ? "bg-white/20" : "bg-black/20"
-              )}
-            >
+            <span className="rounded-full bg-black/30 px-2.5 py-1 text-[13px] font-semibold tnum text-white">
               {fmtPctSigned(dayMove)} today
             </span>
           )}
@@ -51,7 +45,9 @@ export function DawnHero({ rec }: { rec: Recommendation | null }) {
             >
               {fmtMoney(spot)}
             </span>
-            <span className="mb-3 text-[12px] text-white/70">· modeled</span>
+            <span className="mb-3 rounded bg-black/30 px-1.5 py-0.5 text-[12px] font-medium text-white">
+              modeled
+            </span>
           </div>
         ) : (
           <p className="mt-3 font-serif font-light text-white text-[clamp(34px,7vw,48px)]">
